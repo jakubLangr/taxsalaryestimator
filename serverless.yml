@@ -1,0 +1,42 @@
+service: serverless-flask
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  - serverless-apigw-binary
+custom:
+  wsgi:
+    app: application.application
+    packRequirements: false
+  apigwBinary:
+    types: #list of mime-types
+      - "*/*"
+  pythonRequirements:
+    dockerizePip: non-linux
+    slim: true
+  customDomain:
+    domainName: taxsalaryestimate.co.uk
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+    endpointType: 'regional'
+
+package:
+  excludeDevDependencies: true
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: eu-west-1
+
+functions:
+  app:
+    handler: wsgi.handler
+    events:
+      - http: ANY /
+      - http: "ANY {proxy+}"
+      - cors: true
+    environment:
+      FLASK_APP: "application.application"
+      SECRET_KEY: "a3a00306094211ed9f4c000000000019"
